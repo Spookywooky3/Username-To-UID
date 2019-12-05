@@ -30,7 +30,7 @@ namespace GetUserIdFromUsername
             // Change the limit depending on server members and performance, dodgey i know but its better than checking the amount of guild members
             // every time.
             HttpWebRequest req = (HttpWebRequest)WebRequest.Create("https://discordapp.com/api/v6/guilds/" 
-                + guildId.ToString() + "/members?limit=1000"); 
+                + guildId.ToString() + "/members?limit=500"); 
             req.PreAuthenticate = true;
             req.Headers.Add("Authorization", "Bot " + botToken);
             req.Method = "GET";
@@ -43,8 +43,12 @@ namespace GetUserIdFromUsername
             }
             response.Close();
 
-            var json = JsonConvert.DeserializeObject<List<Wrapper>>(dataReceived);
-            var query = json.Single(user => user.discordUser.userName == username && user.discordUser.discriminator == discriminator);
+            var json = await Task.Run(() =>
+                JsonConvert.DeserializeObject<List<Wrapper>>(dataReceived)
+            );
+            var query = await Task.Run(() =>
+                json.Single(user => user.discordUser.userName == username && user.discordUser.discriminator == discriminator)
+            );
 
             ulong userId;
             ulong.TryParse(query.discordUser.id, out userId);
